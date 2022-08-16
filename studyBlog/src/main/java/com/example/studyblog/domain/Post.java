@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Builder
 @Getter
@@ -23,19 +24,25 @@ public class Post extends Timestamped{
     private String title;
 
     @Column(nullable = false)
+
     private String content;
 
     @Column(nullable = false)
     private String imgUrl;
 
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    private List<Comment> comment;
+    @JoinColumn(name = "member_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Member member;
     public void update (PostRequestDto postRequestDto){
         this.title= postRequestDto.getTitle();
         this.content= postRequestDto.getContent();
     }
 
-//    public boolean validateMember(Member member) {
-//        return !this.member.equals(member);
-//    }
+    public boolean validateMember(Member member) {
+        return !this.member.equals(member);
+    }
 
 
 }

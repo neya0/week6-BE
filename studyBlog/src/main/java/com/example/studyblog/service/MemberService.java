@@ -1,6 +1,7 @@
 package com.example.studyblog.service;
 
 import com.example.studyblog.controller.request.*;
+import com.example.studyblog.controller.request.TokenDto;
 import com.example.studyblog.controller.response.*;
 import com.example.studyblog.domain.Member;
 import com.example.studyblog.jwt.TokenProvider;

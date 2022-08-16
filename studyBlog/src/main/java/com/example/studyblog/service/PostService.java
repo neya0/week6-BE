@@ -6,13 +6,18 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.example.studyblog.controller.request.AwsS3;
 import com.example.studyblog.controller.request.PostRequestDto;
+import com.example.studyblog.controller.response.CommentResponseDto;
 import com.example.studyblog.controller.response.PostResponseDto;
 import com.example.studyblog.controller.response.ResponseDto;
+import com.example.studyblog.domain.Comment;
+import com.example.studyblog.domain.Member;
 import com.example.studyblog.domain.Post;
 import com.example.studyblog.jwt.TokenProvider;
+import com.example.studyblog.repository.CommentRepository;
 import com.example.studyblog.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,9 +38,6 @@ public class PostService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final TokenProvider tokenProvider;
-    private final SubCommentRepository subCommentRepository;
-
-    private final PostLikeRepository postLikeRepository;
 
     private final AmazonS3 amazonS3;
 
@@ -113,35 +115,18 @@ public class PostService {
             return ResponseDto.fail("NOT_FOUND", "존재하지 않는 게시글 id 입니다.");
         }
 
-
-        List<Comment> commentList = commentRepository.findAllByPost(post);
+        PageRequest pageRequest = PageRequest.of(0, 50);
+        List<Comment> commentList = commentRepository.findAllByPost(post,pageRequest);
         List<CommentResponseDto> commentResponseDtoList = new ArrayList<>();
-        List<SubCommentResponseDto>  subCommentResponseDtoList = new ArrayList<>();
-        Long likes = postLikeRepository.getCountOfPostLikes(1L, post);
+
+
 
         for (Comment comment : commentList) {
-
-            List<SubComment> subComments = subCommentRepository.findAllByComment(comment);
-
-            for (SubComment subComment : subComments) {
-
-                subCommentResponseDtoList.add(
-                        SubCommentResponseDto.builder()
-                                .id(subComment.getId())
-                                .author(subComment.getComment().getMember().getNickname())
-                                .content(subComment.getContent())
-                                .createAt(subComment.getCreatedAt())
-                                .modifiedAt(subComment.getModifiedAt())
-                                .build()
-                );
-            }
-
             commentResponseDtoList.add(
                     CommentResponseDto.builder()
                             .id(comment.getId())
-                            .author(comment.getMember().getNickname())
+                            .nickname(comment.getMember().getNickname())
                             .content(comment.getContent())
-                            .subCommentResponseDtoList(subCommentResponseDtoList)
                             .createdAt(comment.getCreatedAt())
                             .modifiedAt(comment.getModifiedAt())
                             .build()
@@ -157,7 +142,6 @@ public class PostService {
                         .imgUrl(post.getImgUrl())
                         .commentResponseDtoList(commentResponseDtoList)
                         .author(post.getMember().getNickname())
-                        .likes(likes)
                         .createdAt(post.getCreatedAt())
                         .modifiedAt(post.getModifiedAt())
                         .build()
@@ -165,57 +149,7 @@ public class PostService {
     }
 
 
-    @Transactional(readOnly = true)
-    public ResponseDto<?> getAllPost() {
-        List<Post> postList = postRepository.findAllByOrderByModifiedAtDesc();
-        List<PostListResponseDto> postListResponseDtos = new ArrayList<>();
-        List<CommentResponseDto> commentResponseDtos = new ArrayList<>();
-        List<SubCommentResponseDto> subCommentResponseDtos = new ArrayList<>();
 
-        for (Post post : postList) {
-            List<Comment> commentList = commentRepository.findAllByPost(post);
-            for (Comment comment : commentList) {
-                List<SubComment> subCommentList = subCommentRepository.findAllByComment(comment);
-                for (SubComment subComment : subCommentList) {
-                    subCommentResponseDtos.add(
-                            SubCommentResponseDto.builder()
-                                    .id(subComment.getId())
-                                    .author(subComment.getMember().getNickname())
-                                    .content(subComment.getContent())
-                                    .likes(subComment.getLikes())
-                                    .createAt(subComment.getCreatedAt())
-                                    .modifiedAt(subComment.getModifiedAt())
-                                    .build()
-                    );
-                }
-                commentResponseDtos.add(
-                        CommentResponseDto.builder()
-                                .id(comment.getId())
-                                .author(comment.getMember().getNickname())
-                                .content(comment.getContent())
-                                .subCommentResponseDtoList(subCommentResponseDtos)
-                                .createdAt(comment.getCreatedAt())
-                                .modifiedAt(comment.getModifiedAt())
-                                .build()
-                );
-                postListResponseDtos.add(
-                        PostListResponseDto.builder()
-                                .id(post.getId())
-                                .title(post.getTitle())
-                                .content(post.getContent())
-                                .imgUrl(post.getImgUrl())
-                                .author(post.getMember().getNickname())
-                                .commentResponseDtoList(commentResponseDtos)
-                                .createdAt(post.getCreatedAt())
-                                .modifiedAt(post.getModifiedAt())
-                                .build()
-                );
-            }
-
-
-        }
-        return ResponseDto.success(postListResponseDtos);
-    }
 
 
     @Transactional
