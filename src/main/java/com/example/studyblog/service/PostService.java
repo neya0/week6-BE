@@ -1,10 +1,10 @@
 package com.example.studyblog.service;
 
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.example.studyblog.controller.request.AwsS3;
+//import com.amazonaws.services.s3.AmazonS3;
+//import com.amazonaws.services.s3.model.CannedAccessControlList;
+//import com.amazonaws.services.s3.model.PutObjectRequest;
+//import com.example.studyblog.controller.request.AwsS3;
 import com.example.studyblog.controller.request.PostRequestDto;
 import com.example.studyblog.controller.response.CommentResponseDto;
 import com.example.studyblog.controller.response.PostListResponseDto;
@@ -17,17 +17,17 @@ import com.example.studyblog.jwt.TokenProvider;
 import com.example.studyblog.repository.CommentRepository;
 import com.example.studyblog.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+//import org.springframework.web.multipart.MultipartFile;
 
-import javax.naming.ldap.PagedResultsControl;
+//import javax.naming.ldap.PagedResultsControl;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+//import java.io.File;
+//import java.io.FileOutputStream;
+//import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -37,13 +37,13 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final TokenProvider tokenProvider;
 
-    private final AmazonS3 amazonS3;
-
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
+//    private final AmazonS3 amazonS3;
+//
+//    @Value("${cloud.aws.s3.bucket}")
+//    private String bucket;
 
     @Transactional
-    public ResponseDto<?> createPost(MultipartFile multipartFile, PostRequestDto requestDto, HttpServletRequest request) throws IOException {
+    public ResponseDto<?> createPost(PostRequestDto requestDto, HttpServletRequest request){
         if (null == request.getHeader("RefreshToken")) {
             return ResponseDto.fail("MEMBER_NOT_FOUND",
                     "로그인이 필요합니다.");
@@ -57,18 +57,18 @@ public class PostService {
         Member member = validateMember(request);
         if (null == member) {
             return ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다.");
-        }
-
-        File file = convertMultipartFileToFile(multipartFile)
-                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
-        String uploadFile = upload(file);
-        System.out.println("uploadFile = " + uploadFile);
+       }
+//
+//        File file = convertMultipartFileToFile(multipartFile)
+//                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
+//        String uploadFile = upload(file);
+//        System.out.println("uploadFile = " + uploadFile);
 
         Post post = Post.builder()
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
                 .member(member)
-                .imgUrl(uploadFile)
+//                .imgUrl(uploadFile)
                 .build();
         postRepository.save(post);
         return ResponseDto.success(
@@ -76,35 +76,35 @@ public class PostService {
                         .id(post.getId())
                         .title(post.getTitle())
                         .content(post.getContent())
-                        .imgUrl(post.getImgUrl())
+//                        .imgUrl(post.getImgUrl())
                         .author(post.getMember().getNickname())
                         .createdAt(post.getCreatedAt())
                         .modifiedAt(post.getModifiedAt())
                         .build()
         );
     }
-    private String upload(File file) {
-        String key = randomFileName(file);
-        String imgUrl = putS3(file, key);
-        System.out.println("imgUrl = " + imgUrl);
-        return imgUrl;
-    }
-
-    private String putS3(File uploadFile, String fileName) {
-        amazonS3.putObject(new PutObjectRequest(bucket, fileName, uploadFile)
-                .withCannedAcl(CannedAccessControlList.PublicRead));
-        return getS3(bucket, fileName);
-    }
-
-    private String getS3(String bucket, String fileName) {
-        String imgS3Url = amazonS3.getUrl(bucket, fileName).toString();
-        System.out.println("imgS3Url = " + imgS3Url);
-        return imgS3Url;
-    }
-
-    private String randomFileName(File file) {
-        return UUID.randomUUID() + file.getName();
-    }
+//    private String upload(File file) {
+//        String key = randomFileName(file);
+//        String imgUrl = putS3(file, key);
+//        System.out.println("imgUrl = " + imgUrl);
+//        return imgUrl;
+//    }
+//
+//    private String putS3(File uploadFile, String fileName) {
+//        amazonS3.putObject(new PutObjectRequest(bucket, fileName, uploadFile)
+//                .withCannedAcl(CannedAccessControlList.PublicRead));
+//        return getS3(bucket, fileName);
+//    }
+//
+//    private String getS3(String bucket, String fileName) {
+//        String imgS3Url = amazonS3.getUrl(bucket, fileName).toString();
+//        System.out.println("imgS3Url = " + imgS3Url);
+//        return imgS3Url;
+//    }
+//
+//    private String randomFileName(File file) {
+//        return UUID.randomUUID() + file.getName();
+//    }
 
     @Transactional(readOnly = true)
     public ResponseDto<?> getPost(Long id) {
@@ -137,7 +137,7 @@ public class PostService {
                         .id(post.getId())
                         .title(post.getTitle())
                         .content(post.getContent())
-                        .imgUrl(post.getImgUrl())
+//                        .imgUrl(post.getImgUrl())
                         .commentResponseDtoList(commentResponseDtoList)
                         .author(post.getMember().getNickname())
                         .createdAt(post.getCreatedAt())
@@ -148,7 +148,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public ResponseDto<?> getAllPost() {
-        List<Post> postList = postRepository.findAllByOrderByModifiedAtDesc();
+        List<Post> postList = postRepository.findAllByOrderByCreatedAtDesc();
         List<PostListResponseDto> postResponseDtoList = new ArrayList<>();
 
         // 댓글 수
@@ -253,15 +253,15 @@ public class PostService {
     }
 
 
-    public Optional<File> convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
-        File file = new File(System.getProperty("user.dir") + "/" + multipartFile.getOriginalFilename());
-
-        if (true) {
-            try (FileOutputStream fos = new FileOutputStream(file)){
-                fos.write(multipartFile.getBytes());
-            }
-            return Optional.of(file);
-        }
-        return Optional.empty();
-    }
+//    public Optional<File> convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
+//        File file = new File(System.getProperty("user.dir") + "/" + multipartFile.getOriginalFilename());
+//
+//        if (true) {
+//            try (FileOutputStream fos = new FileOutputStream(file)){
+//                fos.write(multipartFile.getBytes());
+//            }
+//            return Optional.of(file);
+//        }
+//        return Optional.empty();
+//    }
 }

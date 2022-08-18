@@ -11,10 +11,13 @@ import com.example.studyblog.jwt.TokenProvider;
 import com.example.studyblog.repository.CommentRepository;
 import com.example.studyblog.repository.PostRepository;
 import lombok.*;
+import net.bytebuddy.asm.Advice;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +32,7 @@ public class CommentService{
     private final PostRepository postRepository;
     private final TokenProvider tokenProvider;
 
+    @Transactional
     public ResponseDto<CommentResponseDto> createComment(Long postId, CommentRequestDto commentRequestDto, Member member){
         Post post = postRepository.findById(postId).orElse(null);
         if (post == null){
@@ -53,6 +57,7 @@ public class CommentService{
         return ResponseDto.success(commentResponseDto);
     }
 
+    @Transactional
     public ResponseDto<?> createComment(Long postId, CommentRequestDto commentRequestDto, HttpServletRequest request){
         Optional<ResponseDto<?>> validationResult = validationToken(request);
         if (validationResult.isPresent()){
@@ -63,6 +68,7 @@ public class CommentService{
         }
     }
 
+    @Transactional
     public ResponseDto<MsgResponseDto> deleteComment(Long commentId){
         Comment comment = commentRepository.findById(commentId).orElse(null);
         if (comment==null){
@@ -74,6 +80,7 @@ public class CommentService{
 
     }
 
+    @Transactional
     public ResponseDto<?> deleteComment(Long commentId, HttpServletRequest request){
         Optional<ResponseDto<?>> validationResult = validationToken(request);
         if (validationResult.isPresent()){
@@ -83,12 +90,14 @@ public class CommentService{
         }
     }
 
+    @Transactional
     public ResponseDto<CommentResponseDto> updateComment(Long commentId, CommentRequestDto commentRequestDto){
         Comment comment = commentRepository.findById(commentId).orElse(null);
         if (comment==null){
             return ResponseDto.fail("COMMENT_NOT_FOUND", "댓글을 찾을 수 없습니다.");
         }else {
             comment.update(commentRequestDto.getContent());
+            System.out.println("comment = " + comment);
             return ResponseDto.success(CommentResponseDto.builder()
                             .modifiedAt(comment.getModifiedAt())
                             .createdAt(comment.getCreatedAt())
@@ -99,6 +108,7 @@ public class CommentService{
         }
     }
 
+    @Transactional
     public ResponseDto<?> updateComment(Long commentId, CommentRequestDto commentRequestDto, HttpServletRequest request){
         Optional<ResponseDto<?>> validationResult = validationToken(request);
         if (validationResult.isPresent()){
@@ -108,6 +118,7 @@ public class CommentService{
         }
     }
 
+    @Transactional(readOnly = true)
     public ResponseDto<List<CommentResponseDto>> getComment(Long postId, int pageSize, int page){
         Post post = postRepository.findById(postId).orElse(null);
         if (post==null){
@@ -130,6 +141,7 @@ public class CommentService{
         }
     }
 
+    @Transactional(readOnly = true)
     public Optional<ResponseDto<?>> validationToken(HttpServletRequest request){
         if (null == request.getHeader("RefreshToken")) {
             return Optional.of(ResponseDto.fail("MEMBER_NOT_FOUND",

@@ -74,6 +74,7 @@ public class JwtFilter extends OncePerRequestFilter {
               .map(SimpleGrantedAuthority::new)
               .collect(Collectors.toList());
 
+      System.out.println("subject : " + subject);
       UserDetails principal = userDetailsService.loadUserByUsername(subject);
 
       Authentication authentication = new UsernamePasswordAuthenticationToken(principal, jwt, authorities);

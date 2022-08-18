@@ -6,10 +6,10 @@ import com.example.studyblog.controller.response.ResponseDto;
 import com.example.studyblog.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+//import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+//import java.io.IOException;
 
 @RequiredArgsConstructor
 @RestController
@@ -18,18 +18,10 @@ public class PostController {
     private final PostService postService;
 
     @RequestMapping(value = "/api/post", method = RequestMethod.POST)
-    public ResponseDto<?> createPost(
-            @RequestPart(value = "multipartFile", required = false) MultipartFile multipartFile,
-            @RequestPart(value = "requestDto", required = false) PostRequestDto requestDto,
-            HttpServletRequest request) throws IOException {
-
-
-        System.out.println(multipartFile);
-        System.out.println(requestDto.getContent());
-        System.out.println(request.getHeader("Authorization"));
-        System.out.println(request.getHeader("RefreshToken"));
-
-        return postService.createPost(multipartFile, requestDto, request);
+    public ResponseDto<?> createPost(@RequestBody PostRequestDto requestDto, HttpServletRequest request){
+        System.out.println("token: " + request.getHeader("RefreshToken"));
+        System.out.println("token: " + request.getHeader("Authorization"));
+        return postService.createPost(requestDto,request);
     }
 
     @RequestMapping(value = "/api/post/{id}", method = RequestMethod.GET)
