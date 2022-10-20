@@ -107,6 +107,8 @@ class CommentServiceTest {
 
         ResponseDto<MsgResponseDto> responseDto = commentService.deleteComment(1L);
         assertEquals(responseDto.getData().getMsg(),"댓글을 삭제했습니다.");
+        assertNotNull(post);
+        assertNotNull(member);
     }
 
     @Test

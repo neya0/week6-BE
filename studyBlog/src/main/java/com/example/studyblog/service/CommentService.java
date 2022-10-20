@@ -10,6 +10,7 @@ import com.example.studyblog.domain.Post;
 import com.example.studyblog.jwt.TokenProvider;
 import com.example.studyblog.repository.CommentRepository;
 import com.example.studyblog.repository.PostRepository;
+import com.example.studyblog.shared.TokenValidator;
 import lombok.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class CommentService{
 
     private CommentRepository commentRepository;
     private PostRepository postRepository;
+    private TokenValidator tokenValidator;
     private TokenProvider tokenProvider;
 
     public ResponseDto<CommentResponseDto> createComment(Long postId, CommentRequestDto commentRequestDto, Member member){
@@ -53,7 +55,7 @@ public class CommentService{
     }
 
     public ResponseDto<?> createComment(Long postId, CommentRequestDto commentRequestDto, HttpServletRequest request){
-        Optional<ResponseDto<?>> validationResult = validationToken(request);
+        Optional<ResponseDto<?>> validationResult = tokenValidator.validationToken(request);
         if (validationResult.isPresent()){
             return validationResult.get();
         }else{
@@ -74,7 +76,7 @@ public class CommentService{
     }
 
     public ResponseDto<?> deleteComment(Long commentId, HttpServletRequest request){
-        Optional<ResponseDto<?>> validationResult = validationToken(request);
+        Optional<ResponseDto<?>> validationResult = tokenValidator.validationToken(request);
         if (validationResult.isPresent()){
             return validationResult.get();
         }else {
@@ -99,7 +101,7 @@ public class CommentService{
     }
 
     public ResponseDto<?> updateComment(Long commentId, CommentRequestDto commentRequestDto, HttpServletRequest request){
-        Optional<ResponseDto<?>> validationResult = validationToken(request);
+        Optional<ResponseDto<?>> validationResult = tokenValidator.validationToken(request);
         if (validationResult.isPresent()){
             return validationResult.get();
         }else {
@@ -129,18 +131,4 @@ public class CommentService{
         }
     }
 
-    public Optional<ResponseDto<?>> validationToken(HttpServletRequest request){
-        if (null == request.getHeader("Refresh-Token")) {
-            return Optional.of(ResponseDto.fail("MEMBER_NOT_FOUND", "로그인이 필요합니다."));
-        }
-
-        if (null == request.getHeader("Authorization")) {
-            return Optional.of(ResponseDto.fail("MEMBER_NOT_FOUND", "로그인이 필요합니다."));
-        }
-
-        if (!tokenProvider.validateToken(request.getHeader("Refresh-Token"))) {
-            return Optional.of(ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다."));
-        }
-        return Optional.empty();
-    }
 }

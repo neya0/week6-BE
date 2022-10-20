@@ -15,14 +15,9 @@ public class Heart extends Timestamped{
     @EmbeddedId
     private HeartId id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "member_id", nullable = false)
-    protected Member member;
-
     @Builder
     public Heart(Post post, Comment comment, Member member){
-        this.id = new HeartId(post, comment);
-        this.member = member;
+        this.id = new HeartId(post, comment,member);
     }
 
     @Embeddable
@@ -31,12 +26,16 @@ public class Heart extends Timestamped{
     @NoArgsConstructor
     @AllArgsConstructor
     public static class HeartId implements Serializable {
-        @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+        @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "post_id", nullable = false)
         private Post post;
 
-        @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-        @JoinColumn(name = "comment_id", nullable = false)
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "comment_id", nullable = true)
         private Comment comment;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "member_id", nullable = false)
+        protected Member member;
     }
 }
